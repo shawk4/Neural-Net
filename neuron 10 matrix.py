@@ -10,7 +10,6 @@ import statistics
 import matplotlib.pyplot as plt 
 
 num_inputs = 2
-L_rate = .05
 weights = []
 
 
@@ -22,7 +21,7 @@ def Random_MLP_weights(size_of_MLP):
 ## example data input data = [[1.2, -.2], [.8, .1]], 
 ## Example targets input targets = [1, 0], [0, 1]
 ## Example size_of_MLP input size_of_MLP = [2, [num_inputs, 2, 2]] ## input number of layers then number of nodes for each layer  
-def train_epoch(data, targets ,size_of_MLP):
+def train_epoch(data, targets ,size_of_MLP, Learning_rate = 1):
     for i, row in enumerate(data):
         ## Lists to be cleared each iteration
         activations = []
@@ -60,10 +59,10 @@ def train_epoch(data, targets ,size_of_MLP):
             l = len(weights) - layer - 1
             if l == 0 :
                 temp = np.matmul(np.matrix(activations[layer]).transpose(), np.matrix(errors[l]))
-                weights[layer] = np.array(weight - np.multiply(L_rate, temp ))
+                weights[layer] = np.array(weight - np.multiply(Learning_rate, temp ))
             else:
                 temp = np.matmul(np.matrix(activations[layer]).transpose(), np.matrix(errors[l])) ## np.delete(errors[l],-1,1)
-                weights[layer] = np.array(weight - np.multiply(L_rate, temp ))  
+                weights[layer] = np.array(weight - np.multiply(Learning_rate, temp ))  
     #    print('new weights')
     #    print(weights)
     #    print('')
@@ -111,13 +110,13 @@ def accuracy(predictions, answers, regression = False):
     #Import scikit-learn metrics module for accuracy calculation
     from sklearn import metrics   
     if (regression == True):
-        print("Accuracy of k nearest neighbors via mean squared error:", metrics.mean_squared_error(answers, predictions,))
+        print("Accuracy of of neural net test via mean squared error:", metrics.mean_squared_error(answers, predictions,))
     else:     
-        print("Accuracy of k nearest neighbors:", metrics.accuracy_score(answers, predictions))
+        print("Accuracy of neural net test:", metrics.accuracy_score(answers, predictions))
 
 def main():
     ## load in iris data
-    data, targets, regression = data_handling.car()
+    data, targets, regression = data_handling.iris()
 #    print(data)
 #    print(targets)
     # Train test split
@@ -130,10 +129,22 @@ def main():
     num_attributes = data.shape[1]
     num_outputs = len(np.unique(train_answers)) ## if doing regression use 1
     
-    ## create the MLP
+##############################################################################################################################  
+    # Design The neural net
+    #learning step size
+    Learning_rate = .25 
+    # Choose number of learning epochs
+    i = 125
     ## How many layers are wanted, a list of [initial_inputs, first row x nodes, second row y nodes, ... etc] 
-    size_of_MLP = [2, [num_attributes, 6, num_outputs]] ## input number of layers then number of nodes for each layer
+    size_of_MLP = [2, [num_attributes, 3, num_outputs]] ## input number of layers then number of nodes for each layer
+    ## Display the details of the neural net
+    print('learning rate: ', Learning_rate)
+    print('learning epochs: ', i )
+    print('layers: ', size_of_MLP[0])
+    print('number of initial inputs, nodes per layer, output layer: ', size_of_MLP[1])
     
+    ## create the MLP 
+#############################################################################################################################    
     ## Generate random weights for the MLP
     Random_MLP_weights(size_of_MLP)
     
@@ -145,19 +156,19 @@ def main():
         temp[int(answer)] = 1
         train_answers_mod.append(temp)
     
-    i = 0
     iteration_accuracy = []
     iteration = []
-    while i < 125:
+    epoch = 0
+    while epoch < i:
         # Run epoch
-        train_epoch(train_data, train_answers_mod, size_of_MLP)
+        train_epoch(train_data, train_answers_mod, size_of_MLP, Learning_rate )
         predictions = predict(test_data, size_of_MLP) 
         iteration_accuracy.append(1 - iter_accuracy(predictions, test_answers, regression))
-        iteration.append(i)
-        i += 1
+        iteration.append(epoch)
+        epoch += 1
     ## plot the learning curve
     plt.plot(iteration, iteration_accuracy)
-    plt. ylabel('accuracy')
+    plt. ylabel('error')
     plt. xlabel('itterations')
     
     ## run the test
@@ -167,18 +178,3 @@ def main():
     
 if __name__ == "__main__":
     main()       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
